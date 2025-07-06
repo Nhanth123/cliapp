@@ -1,0 +1,29 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Dependency directories (uncomment to include if using Go Modules and want to ignore vendor/)
+# vendor/
+
+# IDE/editor specific files (examples for common editors)
+# VS Code
+.vscode/
+
+# JetBrains IDEs (GoLand, IntelliJ IDEA)
+.idea/
+*.iml
+
+# macOS specific files
+.DS_Store
+
+# Logs
+*.log
