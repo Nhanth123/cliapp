@@ -6,7 +6,9 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/widget"
+	"io"
 )
 
 type App struct {
@@ -20,24 +22,11 @@ type config struct {
 	SaveMenuItem  *fyne.MenuItem
 }
 
-var myApp App
+// var myApp App
 var cfg config
 
 func main() {
-	//var rootCmd = &cobra.Command{
-	//	Use:   "hello",
-	//	Short: "Hello CLI",
-	//	Run: func(cmd *cobra.Command, args []string) {
-	//		fmt.Println("Hello, Cobra CLI!")
-	//	},
-	//}
-	//a := app.New()
-	//w := a.NewWindow("Hello World")
-	//output, entry, btn := myApp.makeUI()
-	//w.SetContent(container.NewVBox(output, entry, btn))
-	//w.Resize(fyne.Size{Width: 500, Height: 500})
-	//w.ShowAndRun()
-	a := app.New()
+	a := app.NewWithID("GUI")
 	win := a.NewWindow("Mark down")
 
 	edit, preview := cfg.makeUI()
@@ -53,22 +42,56 @@ func (app *config) makeUI() (*widget.Entry, *widget.RichText) {
 	preview := widget.NewRichTextFromMarkdown("")
 	app.EditWidget = edit
 	app.PreviewWidget = preview
+
 	edit.OnChanged = preview.ParseMarkdown
 	return edit, preview
 }
 
 func (app *config) createMenuItems(win fyne.Window) {
-	openMenu := fyne.NewMenuItem("Open...", func() {})
-
+	openMenuItem := fyne.NewMenuItem("Open...", app.openFunc(win))
 	saveMenuItem := fyne.NewMenuItem("Save...", func() {})
 	app.SaveMenuItem = saveMenuItem
 	app.SaveMenuItem.Disabled = true
+
+	// create a file menu, and add the three items to it
 	saveAsMenu := fyne.NewMenuItem("Save as...", app.saveAsFunc(win))
 
-	fileMenu := fyne.NewMenu("File", openMenu, saveMenuItem, saveAsMenu)
+	// create a main menu, and add the file menu to it
+	fileMenu := fyne.NewMenu("File", openMenuItem, saveMenuItem, saveAsMenu)
 
 	menu := fyne.NewMainMenu(fileMenu)
 	win.SetMainMenu(menu)
+}
+
+func (app *config) openFunc(win fyne.Window) func() {
+	return func() {
+		startLocation, _ := storage.ListerForURI(storage.NewFileURI("C:/Temp"))
+		openDialog := dialog.NewFileOpen(func(read fyne.URIReadCloser, err error) {
+			if err != nil {
+				dialog.ShowError(err, win)
+				return
+			}
+			if read == nil {
+				return
+			}
+
+			fileURI := read.URI()
+			defer read.Close()
+
+			data, err := io.ReadAll(read)
+			if err != nil {
+				dialog.ShowError(err, win)
+				return
+			}
+			app.EditWidget.SetText(string(data))
+			app.CurrentFile = fileURI
+			win.SetTitle(win.Title() + " - " + fileURI.Name())
+			app.SaveMenuItem.Disabled = false
+		}, win)
+
+		openDialog.SetLocation(startLocation)
+		openDialog.Show()
+	}
 }
 
 func (app *config) saveAsFunc(win fyne.Window) func() {
