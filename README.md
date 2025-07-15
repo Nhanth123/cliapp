@@ -14,6 +14,8 @@ Useful command in devepment
 
 * `go mod vendor`
 
+* `go build -mod=vendor`
+
 * `go run .`
 
 * `fyne package -os windows -icon Icon.png`
