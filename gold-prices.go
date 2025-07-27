@@ -39,14 +39,14 @@ func (g *Gold) GetPrices() (*Price, error) {
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Println("error reading json", err)
+		log.Println("error connecting gold price", err)
 	}
 
 	gold := Gold{}
 	var previous, current, change float64
 	err = json.Unmarshal(body, &gold)
 	if err != nil {
-		log.Println("error unmarshal gold price", err)
+		log.Println("error connecting gold price", err)
 	}
 	previous, current, change = gold.Prices[0].PreviousClose, gold.Prices[0].Price, gold.Prices[0].Change
 
